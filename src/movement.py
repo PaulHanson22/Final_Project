@@ -29,16 +29,12 @@ class Movement:
         rospy.init_node("movement", anonymous=True) #inits ros node
 
         self.mode_sub = rospy.Subscriber("tello/mode", Mode, self.mode_callback)
-        self.camera_sub = rospy.Subscriber("tello/camera", Image, self.camera_callback)
         self.pose2D_sub = rospy.Subscriber("tello/pose2D", Pose2D, self.pose2D_callback)
 
         self.flip_pub = rospy.Publisher("tello/flip", Flip, queue_size = 5)
         self.vel_pub = rospy.Publisher("tello/vel", Twist, queue_size = 5)
         self.land_pub = rospy.Publisher("tello/land", Empty, queue_size = 5)
         self.takeoff_pub = rospy.Publisher("tello/takeoff", Empty, queue_size = 5)
-        
-
-        rospy.Subscriber("tello/state", State, self.state_callback)
 
         self.flip_msg = Flip()
         self.vel_msg = Twist()
@@ -55,16 +51,19 @@ class Movement:
         self.vel_msg.linear.z = 0
         self.vel_msg.angular.z = 0
         self.flip_msg.direction = ""
+        self.target_detected = False
 
 
     def mode_callback(self, mode):
-        mode = mode.mode
-        command = mode.command
+        self.mode = mode.mode
+        self.command = mode.command
+    
     
     def pose2D_callback(self, pose):
-        delta_x = pose.x
-        delta_y = pose.y
-        delta_theta = pose.theta
+        self.delta_x = pose.x
+        self.delta_y = pose.y
+        self.delta_theta = pose.theta
+        self.target_detected = True
 
 
     def find_target(self):
@@ -73,7 +72,8 @@ class Movement:
             self.twist_msg.linear.y = y_velocity
             yaw_velocity = 72
             self.twist_msg.angular.z = yaw_velocity
-            self.vel_pub.publish(self.twist_msg)
+            self.vel_pub.publish(self.vel_msg)
+
 
     def follow(self):
         set_distance = 100
@@ -96,7 +96,7 @@ class Movement:
     def target(self):
         set_distance = 0
         self.find_target()
-        if self.target_found == True:
+        if self.target_detected == True:
             if self.delta_theta < 0.5:
                 self.vel_msg.angular.z = 2 * self.velocity
             elif self.delta_theta > 0.5:
@@ -110,7 +110,9 @@ class Movement:
             self.vel_pub.publish(self.vel_msg)
             self.set_defaults()
     
+
     def tricks(self):
+        flipped = False
         if self.command == 'flip forward':
             self.flip_msg.direction = "f"
         elif self.command == 'flip backward':
@@ -121,56 +123,79 @@ class Movement:
             self.flip_msg.direction = "r"
         else:
             pass
-
+        flipped = True
         self.flip_pub.publish(self.flip_msg)
-        self.flip_msg.direction = ""
+        if flipped == True:
+            self.flip_msg.direction = ""
+
 
     def simple_movement(self):
+        t0 = rospy.Time.now().to_sec()
+        t1 = rospy.Time.now().to_sec()
+        while(t1 - t0 < 1):
+            t1 = rospy.Time.now().to_sec()
         if self.command == 'forward':
-            self.vel_msg.linear.x += 30
+            self.vel_msg.linear.y = self.velocity
         elif self.command == 'backward':
-            self.vel_msg.linear.x -= 30
+            self.vel_msg.linear.y = -self.velocity
         elif self.command == 'left':
-            self.vel_msg.linear.y -= 30
+            self.vel_msg.linear.x = -self.velocity
         elif self.command == 'right':
-            self.vel_msg.linear.y += 30
+            self.vel_msg.linear.x = self.velocity
         elif self.command == 'up':
-            self.vel_msg.linear.z += 30
+            self.vel_msg.linear.z = self.velocity
         elif self.command == 'down':
-            self.vel_msg.linear.z -= 30
+            self.vel_msg.linear.z = -self.velocity
         elif self.command == 'turn left':
-            self.vel_msg.angular.x -= 30
+            self.vel_msg.angular.z = self.velocity
         elif self.command == 'turn right':
-            self.vel_msg.angular.x += 30
+            self.vel_msg.angular.z = -self.velocity
         elif self.command == 'turn 90 degrees left':
-            self.vel_msg.linear.x
+            self.vel_msg.angular.z = -self.velocity
         elif self.command == 'turn 90 degrees right':
-            self.vel_msg.linear.x
+            self.rotate_clockwise(90)
         elif self.command == 'turn 180 degrees left':
-            self.vel_msg.linear.x
+            self.rotate_counter_clockwise(180)
         elif self.command == 'turn 180 degrees right':
-            self.vel_msg.linear.x
+            self.rotate_clockwise(180)
         elif self.command == 'turn 360 degrees left':
-            self.vel_msg.linear.x
+            self.rotate_counter_clockwise(360)
         elif self.command == 'turn 360 degrees right':
-            self.vel_msg.linear.x
+            self.rotate_clockwise(360)
         else:
             pass
         self.vel_pub.publish(self.vel_msg)
-        self.vel_msg.linear.x = 0
-        self.vel_msg.linear.y = 0
-        self.vel_msg.linear.z = 0
-        self.vel_msg.angular.z = 0
+        self.set_defaults()
+
 
     def geometric_movement(self):
         if self.command == 'circle':
-
+            y_velocity = 20
+            self.twist_msg.linear.y = y_velocity
+            yaw_velocity = 72
+            self.twist_msg.angular.z = yaw_velocity
+            self.vel_pub.publish(self.vel_msg)
+            time.sleep(5)
         elif self.command == 'square':
-
+            self.vel_msg.linear.y = -30
+            self.vel_pub.publish(self.vel_msg)
+            time.sleep(1)
+            self.vel_msg.linear.y = 0
+            self.vel_msg.linear.x = 30
+            self.vel_pub.publish(self.vel_msg)
+            time.sleep(1)
+            self.vel_msg.linear.x = 0
+            self.vel_msg.linear.y = 30
+            self.vel_pub.publish(self.vel_msg)
+            time.sleep(1)
+            self.vel_msg.linear.y = 0
+            self.vel_msg.linear.x = -30
+            self.vel_pub.publish(self.vel_msg)
+            time.sleep(1)
+            self.set_defaults()
         else:
             pass
         
-
         
 if __name__ == "__main__":
     movement = Movement()

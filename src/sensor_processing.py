@@ -23,7 +23,7 @@ class Sensors():
         rospy.init_node("sensor_processing", anonymous=True) #inits ros node
         self.bridge = CvBridge()
 
-        self.camera_sub = rospy.Subscribe("tello/camera", Image, self.camera_callback)
+        self.camera_sub = rospy.Subscriber("tello/camera", Image, self.camera_callback)
 
         self.mode_pub = rospy.Publisher("tello/mode", Mode, queue_size = 5)
         self.pose_pub = rospy.Publisher("tello/pose", Pose2D, queue_size = 5)
@@ -42,6 +42,7 @@ class Sensors():
 
     
     def set_hand_gesture(self,image,point_index):
+        x,y = None,None
         with self.mp_hands.Hands(model_complexity=0,min_detection_confidence=0.5,min_tracking_confidence=0.5) as hands:
 
             # To improve performance, optionally mark the image as not writeable to
@@ -64,7 +65,7 @@ class Sensors():
                         self.mp_drawing_styles.get_default_hand_landmarks_style(),
                         self.mp_drawing_styles.get_default_hand_connections_style())
                 image = cv2.circle(image,(int(x),int(y)),10,(235,206,135),10)
-            cv2.imshow('MediaPipe Hands', image)
+                print("meow")
         return (x,y)
 
 
@@ -74,15 +75,18 @@ class Sensors():
 
     
     def set_pose(self,distance,x,y):
-        self.pose_msg.x = distance
-        self.pose_msg.y = y
-        self.pose_msg.theta = x
-        self.pose_pub.publish(self.pose_msg)
+        print(str(x) + "," + str(y))
+        if(x != None and y != None):
+            self.pose_msg.x = distance
+            self.pose_msg.y = y
+            self.pose_msg.theta = x
+            self.pose_pub.publish(self.pose_msg)
 
 
     def camera_callback(self,camera):
         feed = self.bridge.imgmsg_to_cv2(camera, desired_encoding='passthrough')
         x,y = self.set_hand_gesture(feed,8)
+        print('meow')
         self.set_pose(0,x,y)
 
 

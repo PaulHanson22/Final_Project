@@ -40,9 +40,6 @@ class Driver():
     def set_state(self):
         self.state_msg.battery = self.drone.get_battery()
         self.state_msg.height = self.drone.get_height()
-        self.state_msg.time = self.drone.get_flight_time()
-        self.state_msg.highest_temp = self.drone.get_highest_temperature()
-        self.state_msg.is_flying = self.drone.is_flying
         
         self.state_pub.publish(self.state_msg)
 
