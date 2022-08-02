@@ -8,10 +8,8 @@ project(Final_Project)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpy
   rospy
   std_msgs
-  Final_Project
   message_generation
 )
 
@@ -107,9 +105,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
+  #INCLUDE_DIRS include
   LIBRARIES Final_Project
-  CATKIN_DEPENDS message_runtime roscpy rospy std_msgs
+  CATKIN_DEPENDS message_runtime rospy std_msgs
   DEPENDS system_lib
 )
 

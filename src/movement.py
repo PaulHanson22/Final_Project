@@ -30,7 +30,7 @@ class Movement:
 
         self.mode_sub = rospy.Subscriber("tello/mode", Mode, self.mode_callback)
         self.camera_sub = rospy.Subscriber("tello/camera", Image, self.camera_callback)
-        self.pose2D_sub = rospy.Subscriber("tello/pose2D", Image, self.pose2D_callback)
+        self.pose2D_sub = rospy.Subscriber("tello/pose2D", Pose2D, self.pose2D_callback)
 
         self.flip_pub = rospy.Publisher("tello/flip", Flip, queue_size = 5)
         self.vel_pub = rospy.Publisher("tello/vel", Twist, queue_size = 5)
@@ -43,6 +43,7 @@ class Movement:
         self.flip_msg = Flip()
         self.vel_msg = Twist()
         self.mode_msg = Mode()
+        self.pose2D_msg = Pose2D()
         self.camera_msg = Image()
         self.terminate = False
         self.velocity = 50
@@ -67,7 +68,7 @@ class Movement:
 
 
     def find_target(self):
-        if target_detected == False:
+        if self.pose:
             y_velocity = 10
             self.twist_msg.linear.y = y_velocity
             yaw_velocity = 72
@@ -77,7 +78,7 @@ class Movement:
     def follow(self):
         set_distance = 100
         self.find_target()
-        if self.target_found == True:
+        if self.target_detected == True:
             if self.delta_theta < 0.5:
                 self.vel_msg.angular.z = self.velocity
             elif self.delta_theta > 0.5:
@@ -89,6 +90,7 @@ class Movement:
             else:
                 pass
             self.vel_pub.publish(self.vel_msg)
+            self.set_defaults()
     
 
     def target(self):
@@ -106,15 +108,69 @@ class Movement:
             else:
                 pass
             self.vel_pub.publish(self.vel_msg)
+            self.set_defaults()
     
-    def tricks():
-        pass
+    def tricks(self):
+        if self.command == 'flip forward':
+            self.flip_msg.direction = "f"
+        elif self.command == 'flip backward':
+            self.flip_msg.direction = "b"
+        elif self.command == 'flip left':
+            self.flip_msg.direction = "l"
+        elif self.command == 'flip right':
+            self.flip_msg.direction = "r"
+        else:
+            pass
 
-    def simple_movement():
-        pass
+        self.flip_pub.publish(self.flip_msg)
+        self.flip_msg.direction = ""
 
-    def geometric_movement():
-        pass
+    def simple_movement(self):
+        if self.command == 'forward':
+            self.vel_msg.linear.x += 30
+        elif self.command == 'backward':
+            self.vel_msg.linear.x -= 30
+        elif self.command == 'left':
+            self.vel_msg.linear.y -= 30
+        elif self.command == 'right':
+            self.vel_msg.linear.y += 30
+        elif self.command == 'up':
+            self.vel_msg.linear.z += 30
+        elif self.command == 'down':
+            self.vel_msg.linear.z -= 30
+        elif self.command == 'turn left':
+            self.vel_msg.angular.x -= 30
+        elif self.command == 'turn right':
+            self.vel_msg.angular.x += 30
+        elif self.command == 'turn 90 degrees left':
+            self.vel_msg.linear.x
+        elif self.command == 'turn 90 degrees right':
+            self.vel_msg.linear.x
+        elif self.command == 'turn 180 degrees left':
+            self.vel_msg.linear.x
+        elif self.command == 'turn 180 degrees right':
+            self.vel_msg.linear.x
+        elif self.command == 'turn 360 degrees left':
+            self.vel_msg.linear.x
+        elif self.command == 'turn 360 degrees right':
+            self.vel_msg.linear.x
+        else:
+            pass
+        self.vel_pub.publish(self.vel_msg)
+        self.vel_msg.linear.x = 0
+        self.vel_msg.linear.y = 0
+        self.vel_msg.linear.z = 0
+        self.vel_msg.angular.z = 0
+
+    def geometric_movement(self):
+        if self.command == 'circle':
+
+        elif self.command == 'square':
+
+        else:
+            pass
+        
+
         
 if __name__ == "__main__":
     movement = Movement()
@@ -134,6 +190,8 @@ if __name__ == "__main__":
                 movement.simple_movement()
             elif movement.mode ==  "geometric_movement":
                 movement.geomentric_movement()
+            else:
+                pass
             movement.set_defaults()
         except rospy.ROSInterruptException:
             pass
