@@ -150,23 +150,31 @@ class Movement:
             self.vel_msg.angular.z = self.velocity
         elif self.command == 'turn right':
             self.vel_msg.angular.z = -self.velocity
+            
+            
         elif self.command == 'turn 90 degrees left':
             self.vel_msg.angular.z = -self.velocity
+            time.sleep()
         elif self.command == 'turn 90 degrees right':
-            self.rotate_clockwise(90)
+            self.vel_msg.angular.z = self.velocity
+            time.sleep()
         elif self.command == 'turn 180 degrees left':
-            self.rotate_counter_clockwise(180)
+            self.vel_msg.angular.z = -self.velocity
+            time.sleep()
         elif self.command == 'turn 180 degrees right':
-            self.rotate_clockwise(180)
+            self.vel_msg.angular.z = self.velocity
+            time.sleep()
         elif self.command == 'turn 360 degrees left':
-            self.rotate_counter_clockwise(360)
+            self.vel_msg.angular.z = -self.velocity
+            time.sleep()
         elif self.command == 'turn 360 degrees right':
-            self.rotate_clockwise(360)
+            self.vel_msg.angular.z = self.velocity
+            time.sleep()
         else:
             pass
         self.vel_pub.publish(self.vel_msg)
         self.set_defaults()
-
+#figure out sleep times to turn 90,180,360 degrees; float or int?
 
     def geometric_movement(self):
         if self.command == 'circle':
@@ -176,6 +184,9 @@ class Movement:
             self.twist_msg.angular.z = yaw_velocity
             self.vel_pub.publish(self.vel_msg)
             time.sleep(5)
+            
+            #self.set_defaults()???
+            
         elif self.command == 'square':
             self.vel_msg.linear.y = -30
             self.vel_pub.publish(self.vel_msg)
